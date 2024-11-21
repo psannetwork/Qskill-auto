@@ -1,13 +1,9 @@
-// ユーザーにユニット番号を入力してもらう
 const promptUnit = parseInt(prompt("ユニット番号を入力してください (例: 4)"), 10);
 
-// ユーザーに「このユニットすべてをマークしますか？」と確認
 const markAllLessons = prompt("このユニットすべてをマークしますか？ (y/n)").toLowerCase();
 
-// ユニットの値
 const unit = promptUnit;
 
-// レッスン番号を取得するための関数
 function getLessonNumber(lesson) {
   if (lesson === 1) {
     return "01";
@@ -23,15 +19,13 @@ function getLessonNumber(lesson) {
   }
 }
 
-// ランダムな1桁の数字を生成する関数 (0以上、最大でも5)
 function getRandomOffset(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;  // min 以上 max 以下のランダムな数
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-// requestData を作成する関数
 function createRequestData(unit, lesson, activity, fileName) {
-  const order = 1 + getRandomOffset(0, 5);  // orderは1以上になるようにランダム値を加算
-  const time = 40 + getRandomOffset(0, 5);  // timeは40以上になるようにランダム値を加算
+  const order = 1 + getRandomOffset(0, 5);  
+  const time = 40 + getRandomOffset(0, 5);  
 
   return {
     data: JSON.stringify({
