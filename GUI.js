@@ -27,7 +27,7 @@ function getRandomOffset(min, max) {
 
 function createRequestData(unit, lesson, activity, fileName) {
   const order = 10;
-  const time = 40 + getRandomOffset(0, 5);
+  const time = 60 + getRandomOffset(0, 5);
 
   return {
     data: JSON.stringify({
