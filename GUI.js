@@ -193,7 +193,7 @@ function createRequestData(unit, lesson, activity, fileName) {
   };
 }
 
-addPromptDiv('ユニット番号を入力してください (例: 4)', 'unitInput', '次へ', (unitValue) => {
+addPromptDiv('©Psannetwork \n\n\n ユニット番号を入力してください (例: 4)', 'unitInput', '次へ', (unitValue) => {
   const unit = parseInt(unitValue, 10);
   addPromptDiv('このユニットすべてをマークしますか？ (y/n)', 'markAllInput', '確認', (markAllValue) => {
     const markAllLessons = markAllValue.toLowerCase();
