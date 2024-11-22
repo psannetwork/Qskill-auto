@@ -1,4 +1,3 @@
-alert("This script was written by Psan.\nWe do not take any responsibility for what you do with this script.\n©Psannetwork 11/21");
 
 const promptUnit = parseInt(prompt("ユニット番号を入力してください (例: 4)"), 10);
 
@@ -16,7 +15,7 @@ function getLessonNumber(lesson) {
   } else if (lesson === 15 || lesson === 16) {
     return "04";
   } else {
-    alert("無効なレッスン番号が指定されました");
+    console.error("無効なレッスン番号が指定されました");
     throw new Error("レッスン番号は 1 ～ 16 の範囲で指定してください。");
   }
 }
@@ -26,8 +25,8 @@ function getRandomOffset(min, max) {
 }
 
 function createRequestData(unit, lesson, activity, fileName) {
-  const order = 10;
-  const time = 60 + getRandomOffset(0, 5);
+  const order = 1 + getRandomOffset(0, 5);  
+  const time = 40 + getRandomOffset(0, 5);  
 
   return {
     data: JSON.stringify({
@@ -147,50 +146,59 @@ function createRequestData(unit, lesson, activity, fileName) {
   };
 }
 
-function postRequest(requestData) {
-  return fetch("https://q3e.oxfordonlinepractice.com/api/books/129/activities", {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(requestData)
-  })
-    .then(response => response.json())
-    .catch((error) => {
-      alert(`Error: ${error}`);
-      throw error;
-    });
-}
-
+// レッスン1～16を一括で処理する場合
 if (markAllLessons === "y") {
-  const requests = [];
   for (let lessonNum = 1; lessonNum <= 16; lessonNum++) {
     const lesson = getLessonNumber(lessonNum);
     const activity = lessonNum.toString().padStart(2, "0");
-    const fileName = `iQ3e_RW1_${unit.toString().padStart(2, "0")}_${lesson}_${activity}`;
-    const requestData = createRequestData(unit, lesson, activity, fileName);
-    requests.push(postRequest(requestData));
-  }
 
-  Promise.all(requests)
-    .then(() => {
-      alert("Happy hacking! Please reload the page.");
+    // fileName を作成
+    const fileName = `iQ3e_RW1_${unit.toString().padStart(2, "0")}_${lesson}_${activity}`;
+
+    // POSTリクエストのデータ作成
+    const requestData = createRequestData(unit, lesson, activity, fileName);
+
+    // fetch APIを使ってPOSTリクエストを送る
+    fetch("https://q3e.oxfordonlinepractice.com/api/books/129/activities", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json' // JSONデータとして送信
+      },
+      body: JSON.stringify(requestData) // データをJSON形式で送信
     })
-    .catch((error) => {
-      console.error("Error during requests:", error);
-    });
+      .then(response => response.json()) // レスポンスをJSONとして処理
+      .then(data => {
+        console.log('Success:', data); // 成功時のデータを表示
+      })
+      .catch((error) => {
+        console.error('Error:', error); // エラー時のログ
+      });
+  }
 } else {
+  // 1つのレッスンのみ処理する場合
   const promptLesson = parseInt(prompt("レッスン番号を入力してください (例: 5)"), 10);
   const lesson = getLessonNumber(promptLesson);
   const activity = promptLesson.toString().padStart(2, "0");
+
+  // fileName を作成
   const fileName = `iQ3e_RW1_${unit.toString().padStart(2, "0")}_${lesson}_${activity}`;
+
+  // POSTリクエストのデータ作成
   const requestData = createRequestData(unit, lesson, activity, fileName);
 
-  postRequest(requestData)
-    .then(() => {
-      alert("Happy hacking! Please reload the page.");
+  // fetch APIを使ってPOSTリクエストを送る
+  fetch("https://q3e.oxfordonlinepractice.com/api/books/129/activities", {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json' // JSONデータとして送信
+    },
+    body: JSON.stringify(requestData) // データをJSON形式で送信
+  })
+    .then(response => response.json()) // レスポンスをJSONとして処理
+    .then(data => {
+      console.log('Success:', data); // 成功時のデータを表示
     })
     .catch((error) => {
-      console.error("Error during request:", error);
+      console.error('Error:', error); // エラー時のログ
     });
 }
