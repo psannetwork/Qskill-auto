@@ -1,3 +1,15 @@
+// localStorageからstudentIdを取得
+let studentId = localStorage.getItem("studentId");
+
+// studentIdが保存されていない場合は入力を促す
+if (!studentId) {
+  studentId = prompt("studentId を入力してください (空の場合はデフォルト値 2751883 を使用)");
+  if (!studentId) {
+    studentId = "2751883"; // デフォルト値
+  }
+  // 入力したstudentIdをlocalStorageに保存
+  localStorage.setItem("studentId", studentId);
+}
 
 const promptUnit = parseInt(prompt("ユニット番号を入力してください (例: 4)"), 10);
 
@@ -86,7 +98,7 @@ function createRequestData(unit, lesson, activity, fileName) {
           time: time,
           activityType: "mc_questions_single_image",
           score: 8,
-          studentId: "2751883"
+          studentId: studentId
         }
       ],
       order: order,
@@ -142,7 +154,7 @@ function createRequestData(unit, lesson, activity, fileName) {
     time: time,
     activityType: "mc_questions_single_image",
     score: 8,
-    studentId: "2751883"
+    studentId: studentId
   };
 }
 
