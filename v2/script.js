@@ -1,25 +1,26 @@
-// localStorageからstudentIdを取得
 let studentId = localStorage.getItem("studentId");
-
-// studentIdが保存されていない場合は入力を促す
 if (!studentId) {
   studentId = prompt("studentId を入力してください (空の場合はデフォルト値 2751883 を使用)");
   if (!studentId) {
-    studentId = "2751883"; // デフォルト値
+    studentId = "2751883"; 
   }
-  // 入力したstudentIdをlocalStorageに保存
   localStorage.setItem("studentId", studentId);
 }
 
+let bookId = localStorage.getItem("bookId");
+if (!bookId) {
+  bookId = prompt("bookId を入力してください (空の場合はデフォルト値 129 を使用)");
+  if (!bookId) {
+    bookId = "129"; 
+  }
+  localStorage.setItem("bookId", bookId);
+}
+
 const promptUnit = parseInt(prompt("ユニット番号を入力してください (例: 4)"), 10);
-
 const markAllLessons = prompt("このユニットすべてをマークしますか？ (y/n)").toLowerCase();
-
 const unit = promptUnit;
-
-// maxScore と score をpromptで一度だけ取得
 const score = parseInt(prompt("スコアを入力してください (例: 8)"), 10);
-const maxScore = score; // maxScoreとscoreは同じ値に設定
+const maxScore = score;
 
 function getLessonNumber(lesson) {
   if (lesson === 1) {
@@ -162,59 +163,50 @@ function createRequestData(unit, lesson, activity, fileName) {
   };
 }
 
-// レッスン1～16を一括で処理する場合
 if (markAllLessons === "y") {
   for (let lessonNum = 1; lessonNum <= 16; lessonNum++) {
     const lesson = getLessonNumber(lessonNum);
     const activity = lessonNum.toString().padStart(2, "0");
 
-    // fileName を作成
     const fileName = `iQ3e_RW1_${unit.toString().padStart(2, "0")}_${lesson}_${activity}`;
 
-    // POSTリクエストのデータ作成
     const requestData = createRequestData(unit, lesson, activity, fileName);
 
-    // fetch APIを使ってPOSTリクエストを送る
-    fetch("https://q3e.oxfordonlinepractice.com/api/books/129/activities", {
+    fetch(`https://q3e.oxfordonlinepractice.com/api/books/${bookId}/activities`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json' // JSONデータとして送信
+        'Content-Type': 'application/json' 
       },
-      body: JSON.stringify(requestData) // データをJSON形式で送信
+      body: JSON.stringify(requestData) 
     })
-      .then(response => response.json()) // レスポンスをJSONとして処理
+      .then(response => response.json())
       .then(data => {
-        console.log('Success:', data); // 成功時のデータを表示
+        console.log('Success:', data);
       })
       .catch((error) => {
-        console.error('Error:', error); // エラー時のログ
+        console.error('Error:', error);
       });
   }
 } else {
-  // 1つのレッスンのみ処理する場合
   const promptLesson = parseInt(prompt("レッスン番号を入力してください (例: 5)"), 10);
   const lesson = getLessonNumber(promptLesson);
   const activity = promptLesson.toString().padStart(2, "0");
 
-  // fileName を作成
   const fileName = `iQ3e_RW1_${unit.toString().padStart(2, "0")}_${lesson}_${activity}`;
-
-  // POSTリクエストのデータ作成
   const requestData = createRequestData(unit, lesson, activity, fileName);
 
-  // fetch APIを使ってPOSTリクエストを送る
-  fetch("https://q3e.oxfordonlinepractice.com/api/books/129/activities", {
+  fetch(`https://q3e.oxfordonlinepractice.com/api/books/${bookId}/activities`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json' // JSONデータとして送信
+      'Content-Type': 'application/json'
     },
-    body: JSON.stringify(requestData) // データをJSON形式で送信
+    body: JSON.stringify(requestData)
   })
-    .then(response => response.json()) // レスポンスをJSONとして処理
+    .then(response => response.json())
     .then(data => {
-      console.log('Success:', data); // 成功時のデータを表示
+      console.log('Success:', data);
     })
     .catch((error) => {
-      console.error('Error:', error); // エラー時のログ
+      console.error('Error:', error);
     });
 }
