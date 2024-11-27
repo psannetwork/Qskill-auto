@@ -10,22 +10,48 @@ if (!studentId) {
   // 入力したstudentIdをlocalStorageに保存
   localStorage.setItem("studentId", studentId);
 }
-const unit = prompt("ユニット番号を入力してください (例: 4)");
+console.log("studentId:", studentId);  // デバッグ用
 
-// ユーザーに入力してもらう、空にしたいレッスン番号
-const promptLesson = parseInt(prompt("空にしたいレッスン番号を入力してください (例: 5)"), 10);
+const unit = parseInt(prompt("ユニット番号を入力してください (例: 4)"), 10);
+console.log("ユニット番号:", unit);  // デバッグ用
 
-// ユーザーにユニット番号を入力してもらう
+// ユーザーに空にしたいアクティビティ番号を入力してもらう
+const promptActivity = parseInt(prompt("空にしたいアクティビティ番号を入力してください (例: 11)"), 10);
+console.log("空にしたいアクティビティ番号:", promptActivity);  // デバッグ用
+
+// レッスン番号を適切な形式（文字列）に変換する関数
+function getLessonNumber(lesson) {
+  if (lesson === 1) {
+    return "01";
+  } else if (lesson >= 2 && lesson <= 9) {
+    return "02";
+  } else if (lesson >= 10 && lesson <= 14) {
+    return "03";
+  } else if (lesson === 15 || lesson === 16) {
+    return "04";
+  } else {
+    console.error("無効なレッスン番号が指定されました");
+    throw new Error("レッスン番号は 1 ～ 16 の範囲で指定してください。");
+  }
+}
+
+// activity番号はユーザー入力の値そのまま
+const activity = promptActivity;
+console.log("指定されたアクティビティ番号:", activity);  // デバッグ用
+
+// レッスン番号を計算（getLessonNumberを使う）
+const lessonFormatted = getLessonNumber(activity);
+console.log("計算されたレッスン番号:", lessonFormatted);  // デバッグ用
 
 // activity番号をユニットとレッスンから計算
 function calculateActivityNumber(unit, lesson) {
-  // ここでは単純なロジックを例として、ユニットとレッスン番号でアクティビティ番号を決定します
-  // 例えば、ユニット番号とレッスン番号を組み合わせてアクティビティ番号を決める
-  return `${unit.toString().padStart(2, "0")}_${lesson.toString().padStart(2, "0")}`;
+  // アクティビティ番号をユニットとレッスンから生成する例
+  return `${unit.toString().padStart(2, "0")}_${lesson}`;
 }
 
 // activity番号を計算
-const activity = calculateActivityNumber(unit, promptLesson);
+const activityNumber = calculateActivityNumber(unit, lessonFormatted);
+console.log("計算されたアクティビティ番号:", activityNumber);  // デバッグ用
 
 // 指定されたレッスンとアクティビティのデータを空にする関数
 function createEmptyRequestData(unit, lesson, activity, fileName) {
@@ -64,10 +90,12 @@ function createEmptyRequestData(unit, lesson, activity, fileName) {
 }
 
 // fileName を作成
-const fileName = `iQ3e_RW1_${unit.toString().padStart(2, "0")}_${promptLesson.toString().padStart(2, "0")}_${activity}`;
+const fileName = `iQ3e_RW1_${unit.toString().padStart(2, "0")}_${lessonFormatted}_${activity}`;
+console.log("生成されたファイル名:", fileName);  // デバッグ用
 
 // 空のデータを作成
-const requestData = createEmptyRequestData(unit, promptLesson.toString().padStart(2, "0"), activity, fileName);
+const requestData = createEmptyRequestData(unit, lessonFormatted, activity, fileName);
+console.log("送信するデータ:", requestData);  // デバッグ用
 
 // fetch APIを使ってPOSTリクエストを送る
 fetch("https://q3e.oxfordonlinepractice.com/api/books/129/activities", {
