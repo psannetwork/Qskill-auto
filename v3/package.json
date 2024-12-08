@@ -1,0 +1,16 @@
+{
+  "name": "q3e-app",
+  "version": "1.0.0",
+  "description": "A Node.js application for handling Q3E API interactions.",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "Psan",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2",
+    "node-fetch": "^2.6.12"
+  }
+}

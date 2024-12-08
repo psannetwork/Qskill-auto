@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>入力フォーム</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    label { margin-right: 10px; }
+    input { margin-bottom: 10px; }
+    button:disabled { background-color: #ccc; }
+    #output { margin-top: 20px; }
+  </style>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('form');
+      const output = document.getElementById('output');
+      const steps = [
+        document.getElementById('step-1'),
+        document.getElementById('step-2'),
+        document.getElementById('step-3'),
+        document.getElementById('step-4'),
+        document.getElementById('step-5')
+      ];
+
+      const savedData = JSON.parse(localStorage.getItem('formData')) || {};
+      document.getElementById('studentId').value = savedData.studentId || '';
+      document.getElementById('bookId').value = savedData.bookId || '';
+      document.getElementById('cookie').value = savedData.cookie || '';
+
+      let studentId, bookId, cookie, unit, score, lesson;
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const formData = {
+          cookie: document.getElementById('cookie').value,
+          unit: document.getElementById('unit').value,
+          score: document.getElementById('score').value,
+          lesson: document.getElementById('lesson').value,
+          studentId: document.getElementById('studentId').value,
+          bookId: document.getElementById('bookId').value,
+        };
+
+        localStorage.setItem('formData', JSON.stringify(formData));
+
+        if (!formData.cookie || !formData.unit || !formData.score || !formData.lesson) {
+          output.textContent = '必須フィールドをすべて入力してください。';
+          output.style.color = 'red';
+          return;
+        }
+
+        try {
+          document.querySelector('button').disabled = true;
+          const response = await fetch('/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData),
+          });
+
+          const result = await response.json();
+          output.textContent = result.success ? `成功: ${JSON.stringify(result.data)}` : `エラー: ${JSON.stringify(result.error)}`;
+          output.style.color = result.success ? 'green' : 'red';
+        } catch (error) {
+          output.textContent = `通信エラー: ${error.message}`;
+          output.style.color = 'red';
+        } finally {
+          document.querySelector('button').disabled = false;
+        }
+      });
+
+      steps[0].style.display = 'block';
+
+      document.getElementById('next-step-1').addEventListener('click', () => {
+        studentId = document.getElementById('studentId').value || '2751883';
+        bookId = document.getElementById('bookId').value || '129';
+        cookie = document.getElementById('cookie').value;
+
+        if (!cookie || !studentId || !bookId) {
+          alert('Cookie, StudentId, BookIdを入力してください');
+        } else {
+          localStorage.setItem('formData', JSON.stringify({ studentId, bookId, cookie }));
+          steps[0].style.display = 'none';
+          steps[1].style.display = 'block';
+        }
+      });
+
+      document.getElementById('next-step-2').addEventListener('click', () => {
+        unit = document.getElementById('unit').value;
+        if (!unit) {
+          alert('Unitを入力してください');
+        } else {
+          steps[1].style.display = 'none';
+          steps[2].style.display = 'block';
+        }
+      });
+
+      document.getElementById('next-step-3').addEventListener('click', () => {
+        score = document.getElementById('score').value;
+        if (!score) {
+          alert('スコアを入力してください');
+        } else {
+          steps[2].style.display = 'none';
+          steps[3].style.display = 'block';
+        }
+      });
+
+      document.getElementById('next-step-4').addEventListener('click', () => {
+        lesson = document.getElementById('lesson').value;
+        if (!lesson) {
+          alert('レッスンを入力してください');
+        } else {
+          steps[3].style.display = 'none';
+          steps[4].style.display = 'block';
+        }
+      });
+    });
+  </script>
+</head>
+<body>
+  <h1>フォーム入力</h1>
+  <form id="form">
+    <div id="step-1">
+      <label>StudentId (省略可): <input type="text" id="studentId" required></label><br>
+      <label>BookId (省略可): <input type="text" id="bookId" required></label><br>
+      <label>Cookie: <input type="text" id="cookie" required></label><br>
+      <button type="button" id="next-step-1">次へ</button>
+    </div>
+
+    <div id="step-2" style="display:none;">
+      <label>Unit: <input type="number" id="unit" required></label><br>
+      <button type="button" id="next-step-2">次へ</button>
+    </div>
+
+    <div id="step-3" style="display:none;">
+      <label>Score: <input type="number" id="score" required></label><br>
+      <button type="button" id="next-step-3">次へ</button>
+    </div>
+
+    <div id="step-4" style="display:none;">
+      <label>Lesson: <input type="number" id="lesson" required></label><br>
+      <button type="button" id="next-step-4">次へ</button>
+    </div>
+
+    <div id="step-5" style="display:none;">
+      <button type="submit">送信</button>
+    </div>
+  </form>
+  <div id="output"></div>
+</body>
+</html>
