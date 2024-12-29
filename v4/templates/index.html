@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask API リクエスト</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>API リクエストフォーム</h1>
+    <form id="apiForm" action="/submit" method="POST">
+        <div id="studentBookFields">
+            <label for="studentId">Student ID:</label><br>
+            <input type="text" id="studentId" name="studentId" value="2751883"><br><br>
+
+            <label for="bookId">Book ID:</label><br>
+            <input type="text" id="bookId" name="bookId" value="129"><br><br>
+
+            <button type="button" id="next1" onclick="nextStep(1)">次へ</button>
+        </div>
+
+        <div id="unitField" style="display: none;">
+            <label for="unit">Unit (例: 4):</label><br>
+            <input type="number" id="unit" name="unit" value="1"><br><br>
+
+            <button type="button" id="next2" onclick="nextStep(2)">次へ</button>
+        </div>
+
+        <div id="scoreField" style="display: none;">
+            <label for="score">Score:</label><br>
+            <input type="number" id="score" name="score" value="0"><br><br>
+
+            <button type="button" id="next3" onclick="nextStep(3)">次へ</button>
+        </div>
+
+        <div id="lessonField" style="display: none;">
+            <label for="lesson">レッスン番号 (例: 5):</label><br>
+            <input type="number" id="lesson" name="lesson" value="1"><br><br>
+
+            <button type="button" id="next4" onclick="nextStep(4)">次へ</button>
+        </div>
+
+        <div id="cookieField" style="display: none;">
+            <label for="cookie">Cookie:</label><br>
+            <textarea id="cookie" name="cookie"></textarea><br><br>
+
+            <button type="button" id="next5" onclick="nextStep(5)">次へ</button>
+        </div>
+
+        <!-- 送信ボタンは初期状態で非表示にする -->
+        <div id="submitButton" style="display: none;">
+            <input type="submit" value="送信">
+        </div>
+    </form>
+
+    <script>
+        const unitField = document.getElementById('unitField');
+        const scoreField = document.getElementById('scoreField');
+        const lessonField = document.getElementById('lessonField');
+        const cookieField = document.getElementById('cookieField');
+        const submitButton = document.getElementById('submitButton');
+
+        // 各ステップのボタンの管理
+        function nextStep(step) {
+            switch(step) {
+                case 1:
+                    document.getElementById('studentBookFields').style.display = 'none';
+                    unitField.style.display = 'block';
+                    break;
+                case 2:
+                    unitField.style.display = 'none';
+                    scoreField.style.display = 'block';
+                    break;
+                case 3:
+                    scoreField.style.display = 'none';
+                    lessonField.style.display = 'block';
+                    break;
+                case 4:
+                    lessonField.style.display = 'none';
+                    cookieField.style.display = 'block';
+                    break;
+                case 5:
+                    cookieField.style.display = 'none';
+                    submitButton.style.display = 'block';
+                    break;
+            }
+        }
+
+        // 最初に表示するステップ
+        nextStep(1);
+    </script>
+</body>
+</html>
