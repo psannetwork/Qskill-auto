@@ -52,49 +52,7 @@ function createRequestData(unit, lesson, activity, fileName) {
           data: JSON.stringify({
             order: order,
             maxScore: maxScore,
-            state: `<state>
-                      <question>
-                        <answer index="0"/>
-                        <answer index="1"/>
-                        <answer index="2" selected="true">protect</answer>
-                      </question>
-                      <question>
-                        <answer index="0"/>
-                        <answer index="1" selected="true">surprise</answer>
-                        <answer index="2"/>
-                      </question>
-                      <question>
-                        <answer index="0"/>
-                        <answer index="1"/>
-                        <answer index="2" selected="true">pretend</answer>
-                      </question>
-                      <question>
-                        <answer index="0"/>
-                        <answer index="1" selected="true">serious</answer>
-                        <answer index="2"/>
-                      </question>
-                      <question>
-                        <answer index="0"/>
-                        <answer index="1" selected="true">effect</answer>
-                        <answer index="2"/>
-                      </question>
-                      <question>
-                        <answer index="0"/>
-                        <answer index="1" selected="true">rate</answer>
-                        <answer index="2"/>
-                      </question>
-                      <question>
-                        <answer index="0"/>
-                        <answer index="1" selected="true">whole</answer>
-                        <answer index="2"/>
-                      </question>
-                      <question>
-                        <answer index="0"/>
-                        <answer index="1" selected="true">effect</answer>
-                        <answer index="2"/>
-                      </question>
-                      <attempts>-1</attempts>
-                    </state>`
+            state: `<a>`
           }),
           unit: unit.toString().padStart(2, "0"),
           lesson: lesson,
@@ -109,47 +67,6 @@ function createRequestData(unit, lesson, activity, fileName) {
       order: order,
       maxScore: maxScore,
       state: `<state>
-                <question>
-                  <answer index="0"/>
-                  <answer index="1"/>
-                  <answer index="2" selected="true">protect</answer>
-                </question>
-                <question>
-                  <answer index="0"/>
-                  <answer index="1" selected="true">surprise</answer>
-                  <answer index="2"/>
-                </question>
-                <question>
-                  <answer index="0"/>
-                  <answer index="1"/>
-                  <answer index="2" selected="true">pretend</answer>
-                </question>
-                <question>
-                  <answer index="0"/>
-                  <answer index="1" selected="true">serious</answer>
-                  <answer index="2"/>
-                </question>
-                <question>
-                  <answer index="0"/>
-                  <answer index="1" selected="true">effect</answer>
-                  <answer index="2"/>
-                </question>
-                <question>
-                  <answer index="0"/>
-                  <answer index="1" selected="true">rate</answer>
-                  <answer index="2"/>
-                </question>
-                <question>
-                  <answer index="0"/>
-                  <answer index="1" selected="true">whole</answer>
-                  <answer index="2"/>
-                </question>
-                <question>
-                  <answer index="0"/>
-                  <answer index="1" selected="true">effect</answer>
-                  <answer index="2"/>
-                </question>
-                <attempts>-1</attempts>
               </state>`
     }),
     unit: unit.toString().padStart(2, "0"),
