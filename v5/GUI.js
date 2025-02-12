@@ -1,64 +1,80 @@
-// このスクリプトは、Devtoolですぐに実行できます。
-// HTMLを一切使わず、動的にモーダルフォームを作成し入力値を取得します。
-// さらに、ユーザーに手動でスコアを入力するか、自動でJSONから取得するかの選択肢を追加しています。
+// このスクリプトは、DevToolで即実行可能なコンパクトなモーダルフォームを生成し、
+// ユーザーに各種入力値（studentId, bookId, unit, classId, markAllLessons, 自動スコア設定, スコア, 経過時間, レッスン番号）を入力させます。
+// 入力値はlocalStorageに保存され、classIdはAPI URLに反映され、autoScoreが"y"の場合はAPIからJSONデータを取得して自動でスコアを決定します。
 
-// 取得した JSON データを保持するグローバル変数
-let jsonData = null;
-// API の URL（必要に応じて変更してください）
-const apiUrl = 'https://q3e.oxfordonlinepractice.com/api/books/129/activities?classId=379216';
-
-/**
- * 現在の日時を "YYYY-MM-DD HH:mm:ss±HHMM" 形式で取得する関数
- * 例: "2025-02-12 18:43:14+0900"
- */
+// 現在の日時を "YYYY-MM-DD HH:mm:ss±HHMM" 形式で返す関数
 function getCurrentTimezone() {
   const now = new Date();
   const pad = n => String(n).padStart(2, '0');
-  
   const year = now.getFullYear();
   const month = pad(now.getMonth() + 1);
   const day = pad(now.getDate());
   const hours = pad(now.getHours());
   const minutes = pad(now.getMinutes());
   const seconds = pad(now.getSeconds());
-  
   const offsetMinutes = now.getTimezoneOffset();
   const sign = offsetMinutes <= 0 ? '+' : '-';
   const absOffset = Math.abs(offsetMinutes);
   const offsetHours = pad(Math.floor(absOffset / 60));
   const offsetMin = pad(absOffset % 60);
-  
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}${sign}${offsetHours}${offsetMin}`;
 }
 
-// JSONデータをフェッチしてグローバル変数に保持
-fetch(apiUrl, {
-  method: 'GET',
-  headers: {
-    'Content-Type': 'application/json',
-    'timezone': getCurrentTimezone()
-  }
-})
-  .then(response => {
-    if (!response.ok) throw new Error('Network response was not ok');
-    return response.json();
+// レッスン番号を取得する関数
+const getLessonNumber = lesson => {
+  if (lesson < 1 || lesson > 16) throw new Error("レッスン番号は1～16の範囲です");
+  return lesson === 1 ? "01" : lesson <= 9 ? "02" : lesson <= 14 ? "03" : "04";
+};
+
+// リクエストデータ生成関数
+const createRequestData = (unit, lesson, activity, fileName, score, time, studentId, maxScore) => ({
+  data: JSON.stringify({
+    activityAttempts: [{
+      data: JSON.stringify({ order: 1, maxScore, state: `<a>` }),
+      unit: unit.toString().padStart(2, "0"),
+      lesson,
+      activity,
+      fileName,
+      time,
+      activityType: "mc_questions_single_image",
+      score,
+      studentId
+    }],
+    order: 1,
+    maxScore,
+    state: `<state></state>`
+  }),
+  unit: unit.toString().padStart(2, "0"),
+  lesson,
+  activity,
+  fileName,
+  time,
+  activityType: "mc_questions_single_image",
+  score,
+  studentId
+});
+
+// APIへリクエスト送信関数
+const sendRequest = (data, bookId) => {
+  fetch(`https://q3e.oxfordonlinepractice.com/api/books/${bookId}/activities`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
   })
-  .then(data => {
-    jsonData = data;
-    // 例: JSONから取得できたことを確認（必要に応じてコメントアウト）
-    console.log("JSONデータを取得しました。");
+  .then(r => { 
+    if (!r.ok) throw new Error(`HTTPエラー: ${r.status}`);
+    return r.json();
   })
-  .catch(error => console.error('Fetch operation failed:', error));
+  .then(d => console.log("成功:", d))
+  .catch(e => console.error("エラー:", e));
+};
 
 /**
- * 自動でスコアを取得する関数
- * 指定された unit, lesson, activity に対応する maxScore を返します
- * 見つからなければ null を返します
+ * 自動スコア決定用のJSONデータから、指定unit, lesson, activityに対応するmaxScoreを返す関数
+ * 見つからなければnullを返す
  */
-function getAutoScore(unitId, lessonId, activityId) {
-  if (!jsonData || !jsonData.data || !jsonData.data.units) {
-    return null;
-  }
+function getAutoScore(jsonData, unitId, lessonId, activityId) {
+  if (!jsonData || !jsonData.data || !jsonData.data.units) return null;
   for (const unit of jsonData.data.units) {
     if (unit.unit === unitId) {
       if (unit.lessons && Array.isArray(unit.lessons)) {
@@ -79,43 +95,9 @@ function getAutoScore(unitId, lessonId, activityId) {
   return null;
 }
 
-// レッスン番号を取得する関数
-const getLessonNumber = lesson => {
-  if(lesson < 1 || lesson > 16) throw new Error("レッスン番号は1～16の範囲です");
-  return lesson === 1 ? "01" : lesson <= 9 ? "02" : lesson <= 14 ? "03" : "04";
-};
-
-// リクエストデータを作成する関数
-const createRequestData = (unit, lesson, activity, fileName, score, time, studentId, maxScore) => ({
-  data: JSON.stringify({
-    activityAttempts: [{
-      data: JSON.stringify({ order: 1, maxScore, state: `<a>` }),
-      unit: unit.toString().padStart(2,"0"),
-      lesson, activity, fileName, time,
-      activityType: "mc_questions_single_image", score, studentId
-    }],
-    order: 1, maxScore, state: `<state></state>`
-  }),
-  unit: unit.toString().padStart(2,"0"),
-  lesson, activity, fileName, time,
-  activityType: "mc_questions_single_image", score, studentId
-});
-
-// APIへリクエストを送信する関数
-const sendRequest = (data, bookId) => {
-  fetch(`https://q3e.oxfordonlinepractice.com/api/books/${bookId}/activities`,{
-    method:"POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
-  })
-  .then(r => { if(!r.ok) throw new Error(`HTTPエラー: ${r.status}`); return r.json(); })
-  .then(d => console.log("成功:", d))
-  .catch(e => console.error("エラー:", e));
-};
-
 // モーダルフォームを動的に作成して即実行
-(function createModalForm(){
-  // オーバーレイの作成
+(async function createModalForm(){
+  // オーバーレイ作成
   const overlay = document.createElement("div");
   overlay.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;overflow:auto";
   
@@ -124,7 +106,7 @@ const sendRequest = (data, bookId) => {
   modal.style.cssText = "background:#fff;padding:20px;border-radius:8px;width:90%;max-width:500px;position:relative;box-sizing:border-box;max-height:90%;overflow-y:auto";
   
   // 閉じるボタン
-  const closeBtn = document.createElement("button"); 
+  const closeBtn = document.createElement("button");
   closeBtn.textContent = "×";
   closeBtn.style.cssText = "position:absolute;top:10px;right:10px;border:none;background:transparent;font-size:24px;cursor:pointer";
   closeBtn.onclick = () => document.body.removeChild(overlay);
@@ -133,85 +115,93 @@ const sendRequest = (data, bookId) => {
   // フォーム作成
   const form = document.createElement("form");
   
-  // 入力フィールド作成のヘルパー関数
+  // 入力フィールド生成のヘルパー関数
   const createField = (id, labelText, type="text", defaultVal="") => {
     const c = document.createElement("div");
     c.style.marginBottom = "10px";
     const l = document.createElement("label");
-    l.htmlFor = id; 
-    l.textContent = labelText; 
+    l.htmlFor = id;
+    l.textContent = labelText;
     l.style.cssText = "display:block;margin-bottom:5px";
     const i = document.createElement("input");
-    i.type = type; i.id = id; i.name = id; 
-    i.value = defaultVal; 
+    i.type = type;
+    i.id = id;
+    i.name = id;
+    i.value = defaultVal;
     i.style.cssText = "width:100%;padding:8px;box-sizing:border-box";
-    c.appendChild(l); c.appendChild(i); 
+    c.appendChild(l);
+    c.appendChild(i);
     return c;
   };
   
-  // localStorageから値を取得
+  // localStorageから保存された値を取得
   const storedStudentId = localStorage.getItem("studentId") || "2751883",
-        storedBookId = localStorage.getItem("bookId") || "129";
+        storedBookId = localStorage.getItem("bookId") || "129",
+        storedClassId = localStorage.getItem("classId") || "379216";
   
-  form.appendChild(createField("studentId","studentId (空の場合は2751883)","text",storedStudentId));
-  form.appendChild(createField("bookId","bookId (空の場合は129)","text",storedBookId));
-  form.appendChild(createField("unit","ユニット番号 (例:4)","number",""));
+  form.appendChild(createField("studentId", "studentId (空の場合は2751883)", "text", storedStudentId));
+  form.appendChild(createField("bookId", "bookId (空の場合は129)", "text", storedBookId));
+  // classIdフィールド追加
+  form.appendChild(createField("classId", "classId (空の場合は379216)", "text", storedClassId));
+  form.appendChild(createField("unit", "ユニット番号 (例:4)", "number", ""));
   
   // 「このユニットすべてをマークしますか？」フィールド
   const markDiv = document.createElement("div");
   markDiv.style.marginBottom = "10px";
   const markLabel = document.createElement("label");
-  markLabel.htmlFor = "markAllLessons"; 
+  markLabel.htmlFor = "markAllLessons";
   markLabel.textContent = "このユニットすべてをマークしますか？";
   markLabel.style.cssText = "display:block;margin-bottom:5px";
   markDiv.appendChild(markLabel);
   const markSelect = document.createElement("select");
-  markSelect.id = "markAllLessons"; markSelect.name = "markAllLessons";
+  markSelect.id = "markAllLessons";
+  markSelect.name = "markAllLessons";
   ["y","n"].forEach(v=>{
     const op = document.createElement("option");
-    op.value = v; op.textContent = v; markSelect.appendChild(op);
+    op.value = v; op.textContent = v;
+    markSelect.appendChild(op);
   });
-  markSelect.value = "n"; markDiv.appendChild(markSelect); 
+  markSelect.value = "n";
+  markDiv.appendChild(markSelect);
   form.appendChild(markDiv);
   
   // 「自動で点数を決めるか？」フィールド
   const autoScoreDiv = document.createElement("div");
   autoScoreDiv.style.marginBottom = "10px";
   const autoScoreLabel = document.createElement("label");
-  autoScoreLabel.htmlFor = "autoScore"; 
+  autoScoreLabel.htmlFor = "autoScore";
   autoScoreLabel.textContent = "自動で点数を決めますか？";
   autoScoreLabel.style.cssText = "display:block;margin-bottom:5px";
   autoScoreDiv.appendChild(autoScoreLabel);
   const autoScoreSelect = document.createElement("select");
-  autoScoreSelect.id = "autoScore"; autoScoreSelect.name = "autoScore";
+  autoScoreSelect.id = "autoScore";
+  autoScoreSelect.name = "autoScore";
   ["y","n"].forEach(v=>{
     const op = document.createElement("option");
-    op.value = v; op.textContent = v; autoScoreSelect.appendChild(op);
+    op.value = v; op.textContent = v;
+    autoScoreSelect.appendChild(op);
   });
-  autoScoreSelect.value = "n"; autoScoreDiv.appendChild(autoScoreSelect);
+  autoScoreSelect.value = "n";
+  autoScoreDiv.appendChild(autoScoreSelect);
   form.appendChild(autoScoreDiv);
   
   // スコア手入力フィールド
-  const scoreDiv = createField("score","スコア (例:8)","number","8");
+  const scoreDiv = createField("score", "スコア (例:8)", "number", "8");
   form.appendChild(scoreDiv);
   
   // 自動点数が有効の場合、スコア入力を隠す
-  autoScoreSelect.onchange = e => {
-    scoreDiv.style.display = e.target.value === "y" ? "none" : "block";
-  };
+  autoScoreSelect.onchange = e => scoreDiv.style.display = e.target.value==="y"?"none":"block";
   
   // 経過時間フィールド
-  form.appendChild(createField("time","経過時間 (秒) (例:45)","number","45"));
+  form.appendChild(createField("time", "経過時間 (秒) (例:45)", "number", "45"));
   
-  // レッスン番号フィールド（markAllLessonsが "n" の場合のみ表示）
-  const lessonDiv = createField("lessonNumber","レッスン番号 (例:5)","number","");
-  lessonDiv.style.display = markSelect.value === "n" ? "block" : "none";
+  // レッスン番号フィールド（markAllLessonsが「n」の場合のみ表示）
+  const lessonDiv = createField("lessonNumber", "レッスン番号 (例:5)", "number", "");
+  lessonDiv.style.display = markSelect.value==="n"?"block":"none";
   form.appendChild(lessonDiv);
   
   // markAllLessonsによりレッスン番号の表示を切り替え
-  markSelect.onchange = e => {
-    lessonDiv.style.display = e.target.value === "n" ? "block" : "none";
-  };
+  markSelect.onchange = e => lessonDiv.style.display = e.target.value==="n"?"block":"none";
   
   // 送信ボタン
   const submitBtn = document.createElement("button");
@@ -224,83 +214,99 @@ const sendRequest = (data, bookId) => {
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
   
-  // フォーム送信時の処理
-  form.onsubmit = e=>{
+  // フォーム送信時の処理（asyncにしてfetch待機）
+  form.onsubmit = async e => {
     e.preventDefault();
-    const studentId = (document.getElementById("studentId").value.trim()||"2751883"),
-          bookId = (document.getElementById("bookId").value.trim()||"129"),
+    const studentId = (document.getElementById("studentId").value.trim() || "2751883"),
+          bookId = (document.getElementById("bookId").value.trim() || "129"),
+          classId = (document.getElementById("classId").value.trim() || "379216"),
           unitStr = document.getElementById("unit").value.trim(),
           markAll = markSelect.value.toLowerCase(),
           autoScore = autoScoreSelect.value.toLowerCase(),
           scoreInput = document.getElementById("score").value.trim(),
           timeStr = document.getElementById("time").value.trim();
     let lessonStr = document.getElementById("lessonNumber").value.trim();
-    
-    if(!unitStr || isNaN(parseInt(unitStr,10))){
-      alert("有効なユニット番号を入力してください。"); return;
+
+    if (!unitStr || isNaN(parseInt(unitStr, 10))) {
+      alert("有効なユニット番号を入力してください。");
+      return;
     }
-    if(!timeStr || isNaN(parseInt(timeStr,10)) || parseInt(timeStr,10) <= 0){
-      alert("有効な経過時間 (秒) を入力してください。"); return;
+    if (!timeStr || isNaN(parseInt(timeStr, 10)) || parseInt(timeStr, 10) <= 0) {
+      alert("有効な経過時間 (秒) を入力してください。");
+      return;
     }
-    if(markAll==="n"){
-      if(!lessonStr || isNaN(parseInt(lessonStr,10))){
-        alert("有効なレッスン番号を入力してください。"); return;
+    if (markAll === "n") {
+      if (!lessonStr || isNaN(parseInt(lessonStr, 10))) {
+        alert("有効なレッスン番号を入力してください。");
+        return;
       }
-      const ln = parseInt(lessonStr,10);
-      if(ln < 1 || ln > 16){ alert("レッスン番号は1～16です"); return; }
+      const ln = parseInt(lessonStr, 10);
+      if (ln < 1 || ln > 16) {
+        alert("レッスン番号は1～16の範囲です");
+        return;
+      }
     }
     
     localStorage.setItem("studentId", studentId);
     localStorage.setItem("bookId", bookId);
+    localStorage.setItem("classId", classId);
     
-    const unit = parseInt(unitStr,10),
-          timeVal = parseInt(timeStr,10);
-    let scoreVal;
+    const unit = parseInt(unitStr, 10),
+          timeVal = parseInt(timeStr, 10);
+    let scoreVal;  // 未使用。手動の場合はscoreInputを
+    let jsonData = null;
     
-    // markAllが「y」かつ自動点数の場合、各レッスン毎に自動でスコアを取得するので、ここでは使用しない
-    if(autoScore === "y") {
-      // JSONデータが取得されていなければ通知
-      if(!jsonData) {
-        alert("JSONデータがまだ取得できていません。後ほど再度お試しください。");
+    // autoScoreが有効な場合、指定のクラスIDを使ってJSONを取得
+    if (autoScore === "y") {
+      const apiUrl = `https://q3e.oxfordonlinepractice.com/api/books/${bookId}/activities?classId=${classId}`;
+      try {
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'timezone': getCurrentTimezone()
+          }
+        });
+        if (!response.ok) throw new Error('JSON取得エラー: ' + response.status);
+        jsonData = await response.json();
+      } catch (error) {
+        alert("JSONデータの取得に失敗しました。後ほど再度お試しください。");
+        console.error(error);
         return;
-      }
-    } else {
-      if(!scoreInput || isNaN(parseInt(scoreInput,10))) {
-        alert("有効なスコアを入力してください。"); return;
       }
     }
     
-    // リクエスト送信処理
-    if(markAll === "y") {
-      // ユニット内の全16レッスンを対象
-      for(let i = 1; i <= 16; i++){
+    // リクエスト送信
+    if (markAll === "y") {
+      for (let i = 1; i <= 16; i++) {
         const lesson = getLessonNumber(i),
-              activity = i.toString().padStart(2,"0"),
-              fileName = `iQ3e_RW1_${unit.toString().padStart(2,"0")}_${lesson}_${activity}`;
-        // スコア決定：自動の場合はJSONから、手入力の場合はユーザー入力
-        let score = autoScore === "y" ? getAutoScore(unit.toString().padStart(2,"0"), lesson, activity) : parseInt(scoreInput,10);
-        if(score === null) {
-          alert(`Unit: ${unit.toString().padStart(2,"0")}, Lesson: ${lesson}, Activity: ${activity} のスコアが取得できませんでした。`);
+              activity = i.toString().padStart(2, "0"),
+              fileName = `iQ3e_RW1_${unit.toString().padStart(2, "0")}_${lesson}_${activity}`;
+        let score = autoScore === "y"
+          ? getAutoScore(jsonData, unit.toString().padStart(2, "0"), lesson, activity)
+          : parseInt(scoreInput, 10);
+        if (score === null) {
+          alert(`Unit: ${unit.toString().padStart(2, "0")}, Lesson: ${lesson}, Activity: ${activity} のスコアが取得できませんでした。`);
           return;
         }
         const reqData = createRequestData(unit, lesson, activity, fileName, score, timeVal, studentId, score);
         sendRequest(reqData, bookId);
       }
     } else {
-      // 特定のレッスンのみ対象
-      const ln = parseInt(lessonStr,10),
+      const ln = parseInt(lessonStr, 10),
             lesson = getLessonNumber(ln),
-            activity = ln.toString().padStart(2,"0"),
-            fileName = `iQ3e_RW1_${unit.toString().padStart(2,"0")}_${lesson}_${activity}`;
-      let score = autoScore === "y" ? getAutoScore(unit.toString().padStart(2,"0"), lesson, activity) : parseInt(scoreInput,10);
-      if(score === null) {
-        alert(`Unit: ${unit.toString().padStart(2,"0")}, Lesson: ${lesson}, Activity: ${activity} のスコアが取得できませんでした。`);
+            activity = ln.toString().padStart(2, "0"),
+            fileName = `iQ3e_RW1_${unit.toString().padStart(2, "0")}_${lesson}_${activity}`;
+      let score = autoScore === "y"
+        ? getAutoScore(jsonData, unit.toString().padStart(2, "0"), lesson, activity)
+        : parseInt(scoreInput, 10);
+      if (score === null) {
+        alert(`Unit: ${unit.toString().padStart(2, "0")}, Lesson: ${lesson}, Activity: ${activity} のスコアが取得できませんでした。`);
         return;
       }
       const reqData = createRequestData(unit, lesson, activity, fileName, score, timeVal, studentId, score);
       sendRequest(reqData, bookId);
     }
-    
     alert("リクエストを送信しました。");
     document.body.removeChild(overlay);
   };
