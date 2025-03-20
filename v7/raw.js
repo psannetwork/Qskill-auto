@@ -33,7 +33,7 @@
 
   // レッスン番号から変換番号を取得（1～16）
   const getLessonNumber = lesson => { 
-    if(lesson < 1 || lesson > 16) throw new Error("error");
+    if (lesson < 1 || lesson > 16) throw new Error("error");
     return lesson === 1 ? "01" : lesson <= 9 ? "02" : lesson <= 14 ? "03" : "04";
   };
 
@@ -59,7 +59,7 @@
       body: JSON.stringify(data) 
     })
       .then(r => { 
-        if(!r.ok) throw new Error(`HTTPエラー:${r.status}`);
+        if (!r.ok) throw new Error(`HTTPエラー:${r.status}`);
         return r.json();
       })
       .then(d => console.log("成功:", d))
@@ -102,6 +102,20 @@
   subtitle.style.cssText = "font-size:14px;color:#888;margin-bottom:10px";
   header.appendChild(title);
   header.appendChild(subtitle);
+
+  // Contact section is preserved here.
+  const contactDiv = document.createElement("div");
+  contactDiv.style.cssText = "font-size:13px;color:#888;margin-bottom:20px";
+  contactDiv.innerHTML = `
+    <div>Contact:</div>
+    <div>
+      <a href="https://discord.gg/34Y9jZTtsR" target="_blank">Discord</a> | 
+      <a href="https://www.instagram.com/pswitch0224" target="_blank">Instagram</a> | 
+      <a href="https://psannetworks.netlify.app/" target="_blank">Website</a>
+    </div>
+  `;
+  header.appendChild(contactDiv);
+
   modal.appendChild(header);
 
   // ユーティリティ関数：入力フィールドの作成
@@ -196,7 +210,7 @@
   const scoreField = createField("score", "スコア (例:8)", "number", "8");
   scoreDiv.appendChild(scoreField);
 
-  // フォームの組み立て（上記4セクションの順番で）
+  // フォームの組み立て
   const form = document.createElement("form");
   form.appendChild(unitDiv);
   form.appendChild(lessonDiv);
@@ -215,7 +229,7 @@
   document.body.appendChild(overlay);
 
   // --- イベントリスナー設定 ---
-
+  
   // markAllUnits の変更：全ユニットの場合、ユニット入力とレッスン設定を非表示にする
   const markAllUnitsSelect = document.getElementById("markAllUnits");
   markAllUnitsSelect.onchange = e => {
@@ -265,7 +279,7 @@
   // フォーム送信処理
   form.onsubmit = async e => {
     e.preventDefault();
-    const studentId = localStorage.getItem("studentId") || "2751883"; // 学生IDなどはストレージや別途管理
+    const studentId = localStorage.getItem("studentId") || "2751883";
     const bookId = localStorage.getItem("bookId") || "129";
     const classId = localStorage.getItem("classId") || "379216";
     const markAllUnits = document.getElementById("markAllUnits").value.toLowerCase();
@@ -275,7 +289,7 @@
     if(markAllUnits === "y"){
       unitStr = "";
     }
-    let lessonStr = document.getElementById("lessonNumber").value.trim();
+    let lessonStr = document.getElementById("lessonNumber") ? document.getElementById("lessonNumber").value.trim() : "";
     let timeStr = document.getElementById("time").value.trim();
 
     // 時間の設定：ランダムなら30〜300秒（300未満）の整数、固定なら入力値
@@ -333,7 +347,9 @@
       const lessonNumber = getLessonNumber(lesson);
       const activityId = activity.toString().padStart(2, "0");
       const fileName = `iQ3e_RW1_${unitPadded}_${lessonNumber}_${activityId}`;
-      let score = autoScore === "y" ? getAutoScore(jsonData, unitPadded, lessonNumber, activityId) : parseInt(document.getElementById("score").value.trim(), 10);
+      let score = autoScore === "y" 
+                  ? getAutoScore(jsonData, unitPadded, lessonNumber, activityId) 
+                  : parseInt(document.getElementById("score").value.trim(), 10);
       if(score === null){
         alert(`Unit:${unitPadded}, Lesson:${lessonNumber}, Activity:${activityId} のスコアが取得できません`);
         return false;
@@ -347,7 +363,6 @@
     const maxUnits = 10;
     if(markAllUnits === "y"){
       for(let unit = 1; unit <= maxUnits; unit++){
-        // 全レッスンは自動でマーク
         for(let i = 1; i <= 16; i++){
           if(!processMarking(unit, i, i)) return;
         }
